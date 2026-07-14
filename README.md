@@ -24,7 +24,7 @@ A skill **`medscript-daily`** (em `~/.claude/skills/medscript-daily/SKILL.md`)
 coleta o material novo, normaliza para o schema e reescreve `data.js`.
 
 - Rodar manualmente: `/medscript-daily`
-- Agendar todo dia: `/schedule` → "todo dia às 06:00 execute /medscript-daily"
+- Agendar todo dia: `/schedule` → "todo dia às 09:00 execute /medscript-daily"
 
 ## Conformidade
 
