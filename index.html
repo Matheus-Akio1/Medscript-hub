@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MedScript Hub — Base clínica de referência</title>
+<style>
+  :root {
+    --bg: #080b10;
+    --bg-grid: #0c1017;
+    --panel: #12161f;
+    --panel-2: #161b26;
+    --border: #232a38;
+    --border-soft: #1b212c;
+    --text: #e7ecf3;
+    --text-dim: #93a0b4;
+    --text-faint: #5c6879;
+    --accent: #35e0c8;
+    --accent-2: #4c9fff;
+    --accent-glow: rgba(53, 224, 200, 0.15);
+    --radius: 14px;
+    --shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+    /* Cores por tipo */
+    --t-document: #4c9fff;
+    --t-information: #b98cff;
+    --t-prescription: #35e0c8;
+    --t-record: #ffb454;
+    --t-medication: #ff6d8e;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(76, 159, 255, 0.08), transparent 60%),
+      radial-gradient(900px 500px at 0% 0%, rgba(53, 224, 200, 0.06), transparent 55%),
+      var(--bg);
+    color: var(--text);
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+  .mono { font-family: "SFMono-Regular", ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace; }
+
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 32px 24px 80px; }
+
+  /* ---- Topbar ---- */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; margin-bottom: 40px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-mark {
+    width: 40px; height: 40px; border-radius: 11px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center; color: #05201c; font-weight: 800;
+    box-shadow: 0 0 24px var(--accent-glow);
+  }
+  .brand-name { font-weight: 700; font-size: 16px; letter-spacing: -0.01em; }
+  .brand-sub { font-size: 12px; color: var(--text-faint); }
+  .pulse {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--text-dim);
+    background: var(--panel); border: 1px solid var(--border);
+    padding: 8px 14px; border-radius: 999px;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+    box-shadow: 0 0 0 0 var(--accent); animation: ping 2s infinite; }
+  @keyframes ping {
+    0% { box-shadow: 0 0 0 0 rgba(53,224,200,0.5); }
+    70% { box-shadow: 0 0 0 8px rgba(53,224,200,0); }
+    100% { box-shadow: 0 0 0 0 rgba(53,224,200,0); }
+  }
+
+  /* ---- Hero ---- */
+  .hero { margin-bottom: 36px; }
+  .eyebrow {
+    font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--accent); font-weight: 600; margin-bottom: 14px;
+  }
+  h1.headline {
+    font-size: clamp(32px, 5vw, 52px); line-height: 1.05; margin: 0 0 16px;
+    letter-spacing: -0.03em; font-weight: 800;
+    background: linear-gradient(180deg, #ffffff, #a9b6c9);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .headline .hl {
+    background: linear-gradient(120deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .lede { color: var(--text-dim); font-size: 17px; max-width: 640px; }
+
+  /* ---- Stats ---- */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 32px 0; }
+  .stat {
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; position: relative; overflow: hidden;
+  }
+  .stat.today { border-color: rgba(53, 224, 200, 0.4); box-shadow: 0 0 0 1px rgba(53,224,200,0.12), 0 10px 30px rgba(53,224,200,0.06); }
+  .stat-label { font-size: 12px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.08em; }
+  .stat-value { font-size: 34px; font-weight: 800; letter-spacing: -0.02em; margin-top: 6px; }
+  .stat.today .stat-value { color: var(--accent); }
+  .stat-foot { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+  /* ---- Toolbar ---- */
+  .toolbar {
+    display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+    margin-bottom: 20px;
+  }
+  .search {
+    flex: 1 1 320px; position: relative; min-width: 260px;
+  }
+  .search svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-faint); }
+  .search input {
+    width: 100%; background: var(--panel); border: 1px solid var(--border);
+    color: var(--text); border-radius: 11px; padding: 13px 14px 13px 42px;
+    font-size: 15px; outline: none; transition: border-color .15s, box-shadow .15s;
+  }
+  .search input::placeholder { color: var(--text-faint); }
+  .search input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    padding: 12px 16px; border-radius: 11px; font-size: 14px; font-weight: 600;
+    transition: border-color .15s, background .15s, transform .05s;
+  }
+  .btn:hover { border-color: #3a4557; background: var(--panel-2); }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #05201c; border: none;
+  }
+  .btn-primary:hover { filter: brightness(1.05); }
+
+  .export-wrap { position: relative; }
+  .export-menu {
+    position: absolute; right: 0; top: calc(100% + 8px); z-index: 20;
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: 11px;
+    box-shadow: var(--shadow); overflow: hidden; min-width: 200px; display: none;
+  }
+  .export-menu.open { display: block; }
+  .export-menu button {
+    display: flex; width: 100%; align-items: center; gap: 10px; text-align: left;
+    background: none; border: none; color: var(--text); padding: 12px 16px;
+    font-size: 14px; cursor: pointer;
+  }
+  .export-menu button:hover { background: var(--panel); }
+  .export-menu .hint { color: var(--text-faint); font-size: 11px; margin-left: auto; }
+
+  /* ---- Filter chips ---- */
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+    background: var(--panel); border: 1px solid var(--border); color: var(--text-dim);
+    padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 600;
+    transition: all .15s; user-select: none;
+  }
+  .chip:hover { color: var(--text); border-color: #3a4557; }
+  .chip .swatch { width: 8px; height: 8px; border-radius: 50%; }
+  .chip.active { color: #05141a; background: var(--accent); border-color: var(--accent); }
+  .chip.active .swatch { background: #05141a !important; }
+  .chip .count { opacity: .65; font-weight: 500; }
+
+  /* ---- Grid ---- */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .card {
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--border-soft); border-radius: var(--radius);
+    padding: 18px; display: flex; flex-direction: column; gap: 12px;
+    transition: border-color .15s, transform .1s;
+    position: relative; overflow: hidden;
+  }
+  .card::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--type-color, var(--accent));
+  }
+  .card:hover { border-color: #2e3849; transform: translateY(-2px); }
+  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .badge {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 4px 9px; border-radius: 6px; color: var(--type-color);
+    background: color-mix(in srgb, var(--type-color) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--type-color) 30%, transparent);
+  }
+  .verified { font-size: 11px; color: var(--accent); display: inline-flex; align-items: center; gap: 4px; }
+  .card-title { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.3; }
+  .card-summary { font-size: 13.5px; color: var(--text-dim); }
+  .card-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--text-faint); margin-top: auto; }
+  .card-meta b { color: var(--text-dim); font-weight: 600; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag { font-size: 11px; color: var(--text-dim); background: var(--panel-2); border: 1px solid var(--border-soft); padding: 3px 8px; border-radius: 6px; }
+  .card-foot { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-soft); padding-top: 10px; font-size: 12px; color: var(--text-faint); }
+  .phi { color: var(--t-record); font-weight: 600; }
+
+  .card { cursor: pointer; }
+  .card-open-hint { font-size: 11px; color: var(--text-faint); display: inline-flex; align-items: center; gap: 4px; }
+
+  /* ---- Modal ---- */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(4, 6, 10, 0.7); backdrop-filter: blur(4px);
+    display: none; align-items: flex-start; justify-content: center; z-index: 100;
+    padding: 40px 20px; overflow-y: auto;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--border); border-radius: 18px; max-width: 680px; width: 100%;
+    box-shadow: var(--shadow); position: relative; overflow: hidden;
+    animation: pop .18s ease;
+  }
+  @keyframes pop { from { transform: translateY(12px) scale(.98); opacity: 0; } to { transform: none; opacity: 1; } }
+  .modal-top { height: 4px; background: var(--type-color, var(--accent)); }
+  .modal-head { padding: 24px 26px 16px; border-bottom: 1px solid var(--border-soft); }
+  .modal-head .badge { position: static; }
+  .modal-title { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; margin: 12px 0 6px; }
+  .modal-sub { color: var(--text-dim); font-size: 14px; }
+  .modal-close {
+    position: absolute; top: 18px; right: 18px; width: 34px; height: 34px; border-radius: 9px;
+    background: var(--panel); border: 1px solid var(--border); color: var(--text-dim);
+    cursor: pointer; font-size: 18px; line-height: 1; display: grid; place-items: center;
+  }
+  .modal-close:hover { color: var(--text); border-color: #3a4557; }
+  .modal-body { padding: 20px 26px 26px; }
+  .section { margin-bottom: 20px; }
+  .section:last-child { margin-bottom: 0; }
+  .section-h {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;
+    color: var(--type-color, var(--accent)); margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-h::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+  .section p { margin: 0; color: var(--text); font-size: 14.5px; line-height: 1.6; }
+  .kv { display: grid; grid-template-columns: 150px 1fr; gap: 6px 14px; font-size: 14px; }
+  .kv dt { color: var(--text-faint); }
+  .kv dd { margin: 0; color: var(--text); }
+  .chips-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  .rx-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .rx-table th { text-align: left; color: var(--text-faint); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; padding: 6px 10px; border-bottom: 1px solid var(--border-soft); }
+  .rx-table td { padding: 9px 10px; border-bottom: 1px solid var(--border-soft); color: var(--text); }
+  .rx-table td:first-child { font-weight: 600; }
+  .warn-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+  .warn-list li { font-size: 13.5px; color: var(--text); padding-left: 18px; position: relative; }
+  .warn-list li::before { content: "•"; position: absolute; left: 4px; color: var(--type-color); }
+
+  /* Calculator */
+  .calc { background: var(--bg-grid); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+  .calc-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+  .calc-field { display: flex; flex-direction: column; gap: 6px; }
+  .calc-field label { font-size: 12px; color: var(--text-faint); }
+  .calc-field input {
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    border-radius: 9px; padding: 10px 12px; font-size: 15px; width: 130px; outline: none;
+  }
+  .calc-field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+  .calc-out { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .calc-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .calc-card .lbl { font-size: 11px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .06em; }
+  .calc-card .val { font-size: 22px; font-weight: 800; color: var(--accent); margin-top: 2px; }
+  .calc-card .val.capped { color: var(--t-record); }
+  .calc-note { font-size: 12px; color: var(--text-faint); margin-top: 10px; }
+  .modal-link { color: var(--accent-2); text-decoration: none; font-size: 13px; }
+  .modal-link:hover { text-decoration: underline; }
+
+  .empty { text-align: center; padding: 80px 20px; color: var(--text-faint); }
+  .empty h3 { color: var(--text-dim); font-weight: 600; }
+
+  .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border-soft); color: var(--text-faint); font-size: 12px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+
+  @media (max-width: 720px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .topbar { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">M</div>
+      <div>
+        <div class="brand-name">MedScript Hub</div>
+        <div class="brand-sub">Base clínica de referência · alimenta o SaaS</div>
+      </div>
+    </div>
+    <div class="pulse"><span class="dot"></span> Atualização diária automática · <span id="lastUpdated" class="mono">—</span></div>
+  </div>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="eyebrow">Curadoria de médicos conceituados</div>
+    <h1 class="headline">Conhecimento clínico <span class="hl">tipado</span>,<br />renovado todos os dias.</h1>
+    <p class="lede">Documentos, informações, prescrições, prontuários e medicamentos de fontes conceituadas — estruturados e prontos para alimentar seu SaaS. Pesquise, filtre por tipo e exporte.</p>
+  </header>
+
+  <!-- Stats -->
+  <section class="stats">
+    <div class="stat today">
+      <div class="stat-label">Arquivos hoje</div>
+      <div class="stat-value" id="statToday">0</div>
+      <div class="stat-foot" id="statTodayDate">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Total na base</div>
+      <div class="stat-value" id="statTotal">0</div>
+      <div class="stat-foot">registros tipados</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Verificados</div>
+      <div class="stat-value" id="statVerified">0</div>
+      <div class="stat-foot">checagem humana</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Exibindo</div>
+      <div class="stat-value" id="statShown">0</div>
+      <div class="stat-foot">após filtros</div>
+    </div>
+  </section>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="search" type="text" placeholder="Buscar por título, autor, medicamento, tag…" autocomplete="off" />
+    </div>
+    <select id="sort" class="btn" style="padding-right:12px;">
+      <option value="recent">Mais recentes</option>
+      <option value="oldest">Mais antigos</option>
+      <option value="az">A–Z</option>
+    </select>
+    <div class="export-wrap">
+      <button class="btn btn-primary" id="exportBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+        Exportar
+      </button>
+      <div class="export-menu" id="exportMenu">
+        <button data-fmt="json">Exportar JSON <span class="hint">estrutura</span></button>
+        <button data-fmt="csv">Exportar CSV <span class="hint">planilha</span></button>
+        <button data-fmt="ndjson">Exportar NDJSON <span class="hint">ingestão</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter chips -->
+  <div class="chips" id="chips"></div>
+
+  <!-- Grid -->
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none;">
+    <h3>Nenhum registro encontrado</h3>
+    <p>Ajuste a busca ou os filtros de tipo.</p>
+  </div>
+
+  <div class="footer">
+    <span>MedScript Hub · dados de referência/sintéticos — sem PHI real</span>
+    <span class="mono" id="footStamp">schema v1</span>
+  </div>
+</div>
+
+<!-- Modal de detalhe -->
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal" role="dialog" aria-modal="true">
+    <div class="modal-top" id="modalTop"></div>
+    <button class="modal-close" id="modalClose" aria-label="Fechar">×</button>
+    <div class="modal-head">
+      <span class="badge" id="modalBadge"></span>
+      <div class="modal-title" id="modalTitle"></div>
+      <div class="modal-sub" id="modalSub"></div>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+(function () {
+  var DATA = (window.MEDSCRIPT_DATA) || { entries: [], dailyCounts: {}, lastUpdated: "" };
+  var entries = DATA.entries || [];
+
+  var TYPE_META = {
+    document:     { label: "Documento",   color: getComputedStyle(document.documentElement).getPropertyValue('--t-document') },
+    information:  { label: "Informação",  color: getComputedStyle(document.documentElement).getPropertyValue('--t-information') },
+    prescription: { label: "Prescrição",  color: getComputedStyle(document.documentElement).getPropertyValue('--t-prescription') },
+    record:       { label: "Prontuário",  color: getComputedStyle(document.documentElement).getPropertyValue('--t-record') },
+    medication:   { label: "Medicamento", color: getComputedStyle(document.documentElement).getPropertyValue('--t-medication') }
+  };
+  var ORDER = ["document", "information", "prescription", "record", "medication"];
+
+  var state = { q: "", type: "all", sort: "recent" };
+
+  function todayISO() { return new Date().toISOString().slice(0, 10); }
+
+  function fmtDate(iso) {
+    if (!iso) return "—";
+    var p = iso.slice(0, 10).split("-");
+    return p.length === 3 ? p[2] + "/" + p[1] + "/" + p[0] : iso;
+  }
+
+  // ---- Stats ----
+  function renderStats(shown) {
+    var t = todayISO();
+    var todayCount = (DATA.dailyCounts && DATA.dailyCounts[t] != null)
+      ? DATA.dailyCounts[t]
+      : entries.filter(function (e) { return e.dateAdded === t; }).length;
+    document.getElementById("statToday").textContent = todayCount;
+    document.getElementById("statTodayDate").textContent = fmtDate(t);
+    document.getElementById("statTotal").textContent = entries.length;
+    document.getElementById("statVerified").textContent = entries.filter(function (e) { return e.verified; }).length;
+    document.getElementById("statShown").textContent = shown;
+    document.getElementById("lastUpdated").textContent = (DATA.lastUpdated || "").replace("T", " ").slice(0, 16) || "—";
+    document.getElementById("footStamp").textContent = "schema v" + (DATA.schemaVersion || 1) + " · " + entries.length + " registros";
+  }
+
+  // ---- Chips ----
+  function renderChips() {
+    var box = document.getElementById("chips");
+    var counts = {}; ORDER.forEach(function (k) { counts[k] = 0; });
+    entries.forEach(function (e) { if (counts[e.type] != null) counts[e.type]++; });
+
+    var chips = [{ key: "all", label: "Todos", color: "#8a98ad", count: entries.length }];
+    ORDER.forEach(function (k) { chips.push({ key: k, label: TYPE_META[k].label, color: TYPE_META[k].color.trim(), count: counts[k] }); });
+
+    box.innerHTML = "";
+    chips.forEach(function (c) {
+      var el = document.createElement("div");
+      el.className = "chip" + (state.type === c.key ? " active" : "");
+      el.innerHTML = '<span class="swatch" style="background:' + c.color + '"></span>' +
+                     c.label + ' <span class="count">' + c.count + '</span>';
+      el.addEventListener("click", function () { state.type = c.key; render(); });
+      box.appendChild(el);
+    });
+  }
+
+  // ---- Search matching ----
+  function haystack(e) {
+    var parts = [e.title, e.summary, e.author && e.author.name, e.author && e.author.specialty,
+      e.genericName, e.drugClass, e.condition, e.chiefComplaint, e.category, (e.tags || []).join(" ")];
+    (e.brandNames || []).forEach(function (b) { parts.push(b); });
+    (e.indications || []).forEach(function (i) { parts.push(i); });
+    (e.items || []).forEach(function (it) { parts.push(it.drug); });
+    return parts.filter(Boolean).join(" ").toLowerCase();
+  }
+
+  function filtered() {
+    var q = state.q.trim().toLowerCase();
+    var list = entries.filter(function (e) {
+      if (state.type !== "all" && e.type !== state.type) return false;
+      if (q && haystack(e).indexOf(q) === -1) return false;
+      return true;
+    });
+    list.sort(function (a, b) {
+      if (state.sort === "az") return a.title.localeCompare(b.title);
+      var da = a.dateAdded || "", db = b.dateAdded || "";
+      return state.sort === "oldest" ? da.localeCompare(db) : db.localeCompare(da);
+    });
+    return list;
+  }
+
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]; }); }
+
+  // ---- Type-specific detail line ----
+  function detail(e) {
+    switch (e.type) {
+      case "medication": return "<b>" + esc(e.drugClass) + "</b> · " + esc((e.indications || []).slice(0, 2).join(", "));
+      case "prescription": return "<b>" + esc(e.condition) + "</b> · " + (e.items || []).length + " item(ns)";
+      case "record": return "<b>Queixa:</b> " + esc(e.chiefComplaint);
+      case "document": return "<b>" + esc((e.format || "").toUpperCase()) + "</b>" + (e.pages ? " · " + e.pages + " págs" : "");
+      case "information": return "<b>" + esc(e.category || "nota") + "</b>";
+      default: return "";
+    }
+  }
+
+  function card(e) {
+    var m = TYPE_META[e.type] || { label: e.type, color: "#8a98ad" };
+    var color = m.color.trim();
+    var tags = (e.tags || []).slice(0, 4).map(function (t) { return '<span class="tag">' + esc(t) + '</span>'; }).join("");
+    var phi = e.phiStatus ? '<span class="phi">' + (e.phiStatus === "synthetic" ? "sintético" : "desidentificado") + '</span>' : "";
+    return '<article class="card" data-id="' + esc(e.id) + '" style="--type-color:' + color + '">' +
+      '<div class="card-head">' +
+        '<span class="badge">' + esc(m.label) + '</span>' +
+        (e.verified ? '<span class="verified">✓ verificado</span>' : '<span style="font-size:11px;color:var(--text-faint)">pendente</span>') +
+      '</div>' +
+      '<div class="card-title">' + esc(e.title) + '</div>' +
+      '<div class="card-summary">' + esc(e.summary) + '</div>' +
+      '<div style="font-size:12px;color:var(--text-dim)">' + detail(e) + '</div>' +
+      '<div class="tags">' + tags + '</div>' +
+      '<div class="card-meta">' +
+        '<span><b>' + esc(e.author ? e.author.name : "—") + '</b>' + (e.author && e.author.credentials ? " · " + esc(e.author.credentials) : "") + '</span>' +
+        '<span>' + esc(e.source ? e.source.name : "") + '</span>' +
+      '</div>' +
+      '<div class="card-foot">' +
+        '<span class="mono">' + fmtDate(e.dateAdded) + '</span>' +
+        (phi || '<span class="card-open-hint">ver detalhes →</span>') +
+      '</div>' +
+    '</article>';
+  }
+
+  function render() {
+    var list = filtered();
+    var grid = document.getElementById("grid");
+    var empty = document.getElementById("empty");
+    if (!list.length) {
+      grid.innerHTML = ""; empty.style.display = "block";
+    } else {
+      empty.style.display = "none";
+      grid.innerHTML = list.map(card).join("");
+    }
+    renderChips();
+    renderStats(list.length);
+    render._current = list;
+  }
+
+  // ---- Export ----
+  function download(name, text, mime) {
+    var blob = new Blob([text], { type: mime });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = name; document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+  }
+  function csvCell(v) {
+    var s = Array.isArray(v) ? v.join("; ") : (v == null ? "" : String(v));
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  function exportData(fmt) {
+    var list = render._current || filtered();
+    var stamp = todayISO();
+    if (fmt === "json") {
+      download("medscript-" + stamp + ".json", JSON.stringify(list, null, 2), "application/json");
+    } else if (fmt === "ndjson") {
+      download("medscript-" + stamp + ".ndjson", list.map(function (e) { return JSON.stringify(e); }).join("\n"), "application/x-ndjson");
+    } else {
+      var cols = ["id", "type", "title", "summary", "author", "source", "dateAdded", "tags", "verified"];
+      var rows = [cols.join(",")];
+      list.forEach(function (e) {
+        rows.push([e.id, e.type, e.title, e.summary, e.author ? e.author.name : "",
+          e.source ? e.source.name : "", e.dateAdded, e.tags, e.verified].map(csvCell).join(","));
+      });
+      download("medscript-" + stamp + ".csv", "﻿" + rows.join("\n"), "text/csv");
+    }
+  }
+
+  // ---- Modal / detalhe por tipo ----
+  function sec(title, html) { return '<div class="section"><div class="section-h">' + esc(title) + '</div>' + html + '</div>'; }
+  function para(t) { return '<p>' + esc(t) + '</p>'; }
+  function chipsList(arr) { return '<div class="chips-list">' + (arr || []).map(function (x) { return '<span class="tag">' + esc(x) + '</span>'; }).join("") + '</div>'; }
+  function warnList(arr) { return '<ul class="warn-list">' + (arr || []).map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul>'; }
+
+  function detailHTML(e) {
+    var out = "";
+    if (e.type === "prescription") {
+      out += sec("O que o paciente apresentava", para(e.presentation || "—"));
+      var rows = (e.items || []).map(function (it) {
+        return '<tr><td>' + esc(it.drug) + '</td><td>' + esc(it.dose) + '</td><td>' + esc(it.route) +
+          '</td><td>' + esc(it.frequency) + '</td><td>' + esc(it.duration || "—") + '</td></tr>';
+      }).join("");
+      out += sec("Prescrição", '<table class="rx-table"><thead><tr><th>Medicamento</th><th>Dose</th><th>Via</th><th>Frequência</th><th>Duração</th></tr></thead><tbody>' + rows + '</tbody></table>');
+      if (e.rationale) out += sec("Racional clínico", para(e.rationale));
+      if (e.notes) out += sec("Observações", para(e.notes));
+    } else if (e.type === "record") {
+      out += sec("Identificação", para(e.identification || "—"));
+      out += sec("Anamnese", para(e.anamnese || "—"));
+      out += sec("Diagnóstico", para(e.diagnostico || "—"));
+      out += sec("Evolução", para(e.evolucao || "—"));
+    } else if (e.type === "medication") {
+      out += sec("Identificação", '<dl class="kv">' +
+        '<dt>Nome genérico</dt><dd>' + esc(e.genericName) + '</dd>' +
+        (e.brandNames ? '<dt>Marcas</dt><dd>' + esc(e.brandNames.join(", ")) + '</dd>' : "") +
+        '<dt>Classe</dt><dd>' + esc(e.drugClass) + '</dd>' +
+        '<dt>Indicações</dt><dd>' + esc((e.indications || []).join("; ")) + '</dd>' +
+        (e.controlStatus ? '<dt>Status</dt><dd>' + esc(e.controlStatus) + '</dd>' : "") +
+      '</dl>');
+      out += sec("Dosagem e administração", para(e.administration || "—") + (e.commonDoses ? '<div style="margin-top:10px">' + chipsList(e.commonDoses) + '</div>' : ""));
+      var safety = "";
+      if (e.contraindications) safety += '<div style="margin-bottom:10px"><b style="color:var(--text-dim);font-size:13px">Contraindicações</b>' + warnList(e.contraindications) + '</div>';
+      if (e.adverseEffects) safety += '<div style="margin-bottom:10px"><b style="color:var(--text-dim);font-size:13px">Efeitos adversos</b>' + warnList(e.adverseEffects) + '</div>';
+      if (e.interactions) safety += '<div style="margin-bottom:10px"><b style="color:var(--text-dim);font-size:13px">Interações</b>' + warnList(e.interactions) + '</div>';
+      if (e.pregnancyCategory) safety += '<div><b style="color:var(--text-dim);font-size:13px">Gestação</b><p style="margin-top:4px">' + esc(e.pregnancyCategory) + '</p></div>';
+      out += sec("Segurança clínica", safety || para("—"));
+      out += sec("Identificação física", para(e.physicalId || "—"));
+      out += sec("Calculadora de dose", calcHTML(e));
+    } else {
+      // document / information
+      if (e.body) out += sec("Conteúdo", para(e.body.replace(/^#+\s*/gm, "").replace(/\n/g, " ")));
+      out += sec("Resumo", para(e.summary));
+      if (e.type === "document") out += sec("Arquivo", '<dl class="kv"><dt>Formato</dt><dd>' + esc((e.format || "").toUpperCase()) + '</dd>' + (e.pages ? '<dt>Páginas</dt><dd>' + e.pages + '</dd>' : "") + '</dl>');
+    }
+    // Fonte comum
+    var src = e.source || {};
+    out += sec("Fonte", '<dl class="kv">' +
+      '<dt>Origem</dt><dd>' + esc(src.name || "—") + (src.tier ? ' · ' + esc(src.tier) : "") + '</dd>' +
+      '<dt>Autor</dt><dd>' + esc(e.author ? e.author.name : "—") + (e.author && e.author.specialty ? " · " + esc(e.author.specialty) : "") + '</dd>' +
+      (src.url ? '<dt>Link</dt><dd><a class="modal-link" href="' + esc(src.url) + '" target="_blank" rel="noopener">' + esc(src.url) + '</a></dd>' : "") +
+      (src.license ? '<dt>Licença</dt><dd>' + esc(src.license) + '</dd>' : "") +
+    '</dl>');
+    return out;
+  }
+
+  function calcHTML(e) {
+    var d = e.dosing || {};
+    var byWeight = d.mgPerKg && d.mgPerKg > 0;
+    var head = '<div class="calc" data-mgkg="' + (d.mgPerKg || 0) + '" data-max="' + (d.maxDoseMg || 0) + '" data-conc="' + (d.concentrationMgPerMl || 0) + '" data-times="' + (d.timesPerDay || 0) + '">';
+    if (!byWeight) {
+      return head + '<p style="color:var(--text-dim);font-size:13.5px;margin:0">Dose fixa — não calculada por peso.' +
+        (e.commonDoses ? ' Doses usuais: ' + esc(e.commonDoses.join(", ")) + '.' : "") + '</p>' +
+        (d.note ? '<div class="calc-note">' + esc(d.note) + '</div>' : "") + '</div>';
+    }
+    return head +
+      '<div class="calc-row">' +
+        '<div class="calc-field"><label>Peso (kg)</label><input type="number" class="calc-weight" min="0" step="0.1" placeholder="ex.: 20" /></div>' +
+        '<div class="calc-field"><label>mg/kg/dose</label><input type="number" class="calc-mgkg" value="' + d.mgPerKg + '" step="0.1" /></div>' +
+      '</div>' +
+      '<div class="calc-out">' +
+        '<div class="calc-card"><div class="lbl">Dose por administração</div><div class="val calc-dose">—</div></div>' +
+        '<div class="calc-card"><div class="lbl">' + (d.concentrationMgPerMl ? "Volume (mL)" : "Dose diária") + '</div><div class="val calc-sec">—</div></div>' +
+      '</div>' +
+      '<div class="calc-note">' + (d.note ? esc(d.note) : "") +
+        (d.maxDoseMg ? ' Dose máx.: ' + d.maxDoseMg + ' mg/dose.' : "") +
+        (d.concentrationMgPerMl ? ' Concentração: ' + d.concentrationMgPerMl + ' mg/mL.' : "") +
+      ' Confirme sempre com a fonte oficial.</div>' +
+    '</div>';
+  }
+
+  function wireCalc(root) {
+    var calc = root.querySelector(".calc"); if (!calc) return;
+    var wEl = calc.querySelector(".calc-weight"); if (!wEl) return;
+    var max = parseFloat(calc.getAttribute("data-max")) || 0;
+    var conc = parseFloat(calc.getAttribute("data-conc")) || 0;
+    var times = parseFloat(calc.getAttribute("data-times")) || 0;
+    function recalc() {
+      var w = parseFloat(wEl.value) || 0;
+      var mgkg = parseFloat(calc.querySelector(".calc-mgkg").value) || 0;
+      var doseEl = calc.querySelector(".calc-dose");
+      var secEl = calc.querySelector(".calc-sec");
+      if (w <= 0 || mgkg <= 0) { doseEl.textContent = "—"; secEl.textContent = "—"; doseEl.classList.remove("capped"); return; }
+      var dose = w * mgkg;
+      var capped = max && dose > max;
+      if (capped) dose = max;
+      doseEl.textContent = (Math.round(dose * 10) / 10) + " mg";
+      doseEl.classList.toggle("capped", !!capped);
+      if (conc) { secEl.textContent = (Math.round((dose / conc) * 100) / 100) + " mL"; }
+      else if (times) { secEl.textContent = (Math.round(dose * times * 10) / 10) + " mg/dia"; }
+      else { secEl.textContent = "—"; }
+    }
+    wEl.addEventListener("input", recalc);
+    calc.querySelector(".calc-mgkg").addEventListener("input", recalc);
+  }
+
+  function openModal(id) {
+    var e = entries.filter(function (x) { return x.id === id; })[0]; if (!e) return;
+    var m = TYPE_META[e.type] || { label: e.type, color: "#8a98ad" };
+    var color = m.color.trim();
+    document.getElementById("modalTop").style.background = color;
+    document.getElementById("modalTop").parentElement.style.setProperty("--type-color", color);
+    var badge = document.getElementById("modalBadge");
+    badge.textContent = m.label; badge.style.setProperty("--type-color", color);
+    badge.style.color = color;
+    document.getElementById("modalTitle").textContent = e.title;
+    document.getElementById("modalSub").textContent = (e.author ? e.author.name : "") +
+      (e.author && e.author.credentials ? " · " + e.author.credentials : "") + " · " + fmtDate(e.dateAdded);
+    var body = document.getElementById("modalBody");
+    body.innerHTML = detailHTML(e);
+    wireCalc(body);
+    document.getElementById("overlay").classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+  function closeModal() {
+    document.getElementById("overlay").classList.remove("open");
+    document.body.style.overflow = "";
+  }
+  document.getElementById("grid").addEventListener("click", function (e) {
+    var c = e.target.closest(".card"); if (c) openModal(c.getAttribute("data-id"));
+  });
+  document.getElementById("modalClose").addEventListener("click", closeModal);
+  document.getElementById("overlay").addEventListener("click", function (e) { if (e.target === this) closeModal(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeModal(); });
+
+  // ---- Wire up ----
+  document.getElementById("search").addEventListener("input", function (e) { state.q = e.target.value; render(); });
+  document.getElementById("sort").addEventListener("change", function (e) { state.sort = e.target.value; render(); });
+
+  var menu = document.getElementById("exportMenu");
+  document.getElementById("exportBtn").addEventListener("click", function (e) { e.stopPropagation(); menu.classList.toggle("open"); });
+  document.addEventListener("click", function () { menu.classList.remove("open"); });
+  menu.addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    exportData(b.getAttribute("data-fmt")); menu.classList.remove("open");
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
